@@ -1,2 +1,2 @@
-# spring_rest
-spring-boot, REST services
+# spring_docker
+spring_boot_docker

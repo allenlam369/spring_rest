@@ -1,63 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
 	xmlns:tx="http://www.springframework.org/schema/tx"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
-http://www.springframework.org/schema/beans/spring-beans.xsd
-http://www.springframework.org/schema/data/jpa
-http://www.springframework.org/schema/data/jpa/spring-jpa-1.0.xsd
-http://www.springframework.org/schema/tx
-http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
-http://www.springframework.org/schema/context
-http://www.springframework.org/schema/context/spring-context-3.1.xsd">
-	<!-- Configure the data source bean -->
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd
+ http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+ http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd">
 
-<!-- 
-	<jee:jndi-lookup id="dataSource" jndi-name="java:comp/env/jdbc/CustomerSupport" />
- -->
+	<!-- Setup a Connection Pool DataSource -->
+	<!-- <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" 
+		destroy-method="close" p:driverClass="${jdbc.driverClass}" p:jdbcUrl="${jdbc.url}" 
+		p:user="${jdbc.user}" p:password="${jdbc.password}" p:acquireIncrement="10" 
+		p:idleConnectionTestPeriod="60" p:maxStatements="50" p:minPoolSize="10" p:maxPoolSize="50"/> -->
 
-	<!-- Create default configuration for Hibernate -->
-	<bean id="hibernateJpaVendorAdapter"
-		class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter" />
-	<!-- Configure the entity manager factory bean -->
-	<bean id="entityManagerFactory"
+
+<!--  spring.jpa.database-platform=org.hibernate.dialect.MySQL5InnoDBDialect -->
+<!-- class="org.springframework.jdbc.datasource.DriverManagerDataSource" -->
+	<bean name="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName"
+			value="com.mysql.jdbc.Driver" />
+		<property name="url"
+			value="jdbc:mysql://x3_mysql:3306/test_db" />
+<!-- 			value="jdbc:mysql://127.0.0.1:3307/test_db" />  -->
+		<property name="username" value="root" />
+		<property name="password" value="pass" />
+	</bean>
+
+
+	<!-- Initialize db -->
+	<!-- <jdbc:initialize-database data-source="dataSource" ignore-failures="DROPS"> 
+		<jdbc:script location="classpath:db/data.sql"/> </jdbc:initialize-database> -->
+	<bean id="sessionFactory"
 		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
 		<property name="dataSource" ref="dataSource" />
-		<property name="jpaVendorAdapter"
-			ref="hibernateJpaVendorAdapter" />
-		<!-- Set JPA properties -->
+		<property name="packagesToScan"
+			value="github.priyatam.springrest.domain" />
 		<property name="jpaProperties">
 			<props>
-				<prop key="hibernate.dialect">org.hibernate.dialect.H2Dialect</prop>
-				<prop key="javax.persistence.schema-generation.database.action">none</prop>
-				<prop key="hibernate.ejb.use_class_enhancer">true</prop>
+				<prop key="hibernate.hbm2ddl.auto">create</prop>
+				<prop key="hibernate.ejb.naming_strategy">github.priyatam.springrest.utils.CustomHibernateNamingStrategy
+				</prop>
 			</props>
 		</property>
-		<!-- Set base package of your entities -->
-		<property name="packagesToScan" value="allen.model" />
-		<!-- Set share cache mode -->
-		<property name="sharedCacheMode" value="ENABLE_SELECTIVE" />
-		<!-- Set validation mode -->
-		<property name="validationMode" value="NONE" />
+		<property name="jpaVendorAdapter">
+			<bean
+				class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+				<property name="showSql" value="true" />
+				<property name="generateDdl" value="true" />
+				<property name="database" value="Mysql" />
+			</bean>
+		</property>
 	</bean>
-	<!-- Configure the transaction manager bean -->
+
 	<bean id="transactionManager"
-		class="org.springframework.orm.jpa.JpaTransactionManager">
-		<property name="entityManagerFactory"
-			ref="entityManagerFactory" />
-	</bean>
-	
-	<!-- Enable annotation driven transaction management -->
-	<!-- 
-	<tx:annotation- driven />
-	 -->
-	
-	<!-- Configure Spring Data JPA and set the base package of the repository 
-		interfaces -->
-	<!-- specify the package that contains the DAO interfaces: scan all packages 
-		below this path for interfaces extending JpaRepository and creates a Spring 
-		bean for it -->
-	<jpa:repositories base-package="allen.model" />
+		class="org.springframework.orm.jpa.JpaTransactionManager"
+		p:entityManagerFactory-ref="sessionFactory" />
+
+	<!--Enable Spring @Transactional semantics using proxies -->
+	<tx:annotation-driven />
+
 </beans>

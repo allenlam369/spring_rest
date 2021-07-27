@@ -33,7 +33,8 @@ public class EmployeeController {
 
 	@PostMapping("/employees")
 	Employee newEmploee(@RequestBody Employee newEmployee) {
-		return repo.save(newEmployee);
+		Employee emp = repo.save(newEmployee);
+		return emp;
 	}
 
 //	@GetMapping("/employees/{id}")

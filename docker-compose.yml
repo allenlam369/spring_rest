@@ -1,8 +1,27 @@
-version: '3.9'
 services:
 
-  rest:
+  api:
+    container_name: api
+    restart: always
+    expose:
+      - 9999
+    ports:
+      - 9999:9090
+    networks:
+      - backend
     build: .
+    environment:
+      - SPRING-DATASOURCE-URL=jdbc:mysql://x3_mysql:3306/test_db
+
+#    image: openjdk:11
+#    working_dir: /app
+#    volumes:
+#      - ./:/app
+    command: ./mvnw spring-boot:run
+
+networks:
+  backend:
+    name: api-net
 
 
 

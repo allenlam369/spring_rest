@@ -1,0 +1,37 @@
+image: larsdroid/integratieproject1:v1
+services:
+  - docker:dind
+
+variables:
+  DOCKER_DRIVER: overlay
+  SPRING_PROFILES_ACTIVE: gitlab-ci
+
+stages:
+  - build
+  - package
+  - deploy
+
+before_script:
+   - echo "Start CI/CD"
+
+maven-build:
+  image: maven:3-jdk-11
+  stage: build
+  script:
+    - "mvn package -B"
+  artifacts:
+    paths:
+      - target/*.jar
+
+deploy:
+  stage: deploy
+  script:
+    - gcloud auth activate-service-account --key-file $GOOGLE_SERVICE_ACCOUNT_FILE
+    - gcloud -q config set project ${GOOGLE_PROJECT_ID}
+    - gcloud app deploy app.yaml --quiet --project $GOOGLE_PROJECT_ID
+  only:
+    - master
+
+after_script:
+  - echo "End CI/CD"
+
